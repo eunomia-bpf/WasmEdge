@@ -131,6 +131,10 @@ jobs:
             output_path: plugins/wasmedge_process
             output_bin: libwasmedgePluginWasmEdgeProcess.so
             tar_name: wasmedge_process
+          - name: wasm_bpf
+            output_path: plugins/wasm_bpf
+            output_bin: libwasmedgePluginWasmBpf.so
+            tar_name: wasm_bpf
     name: Build and upload WasmEdge ${{ matrix.name }} plugin on Ubuntu 22.04
     needs: create_release
     runs-on: ubuntu-latest
@@ -181,6 +185,16 @@ jobs:
           mkdir -p build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_PLUGIN_PROCESS=On ..
+          cd ${{ matrix.output_path }}
+          make -j
+      - name: Build wasm_bpf plugin
+        if: contains(matrix.name, 'wasm_bpf')
+        run: |
+          apt-get update
+          apt-get install -y libelf-dev zlib1g-dev
+          mkdir -p build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_PLUGIN_WASM_BPF=On ..
           cd ${{ matrix.output_path }}
           make -j
       - name: Prepare the WasmEdge ${{ matrix.name }} plugin tar.gz package
@@ -253,6 +267,14 @@ jobs:
             cmake_plugin_option: "-DWASMEDGE_PLUGIN_WASI_CRYPTO=ON -DOPENSSL_ROOT_DIR=$(pwd)/openssl-1.1.1n/openssl"
             tar_name: wasi_crypto
             host_runner: linux-arm64
+          - name: wasm_bpf
+            docker_tag: manylinux2014_x86_64
+            output_path: plugins/wasm_bpf
+            output_bin: libwasmedgePluginWasmBpf.so
+            cmake_plugin_option: "-DWASMEDGE_PLUGIN_WASM_BPFS=ON"
+            tar_name: wasmedge_bpf
+            host_runner: ubuntu-latest
+            deps_path: "utils/wasm_bpf/install-build-deps.sh"
     name: Build and upload WasmEdge ${{ matrix.name }} plugin on ${{ matrix.docker_tag }}
     needs: create_release
     runs-on: ${{ matrix.host_runner }}
