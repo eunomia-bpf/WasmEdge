@@ -11,9 +11,9 @@ extern "C" {
 namespace WasmEdge {
 namespace Host {
 
-#define ensure_memory_size(var, offset, size)                                  \
-  const auto var##_span = memory->getSpan<char>(offset, size);                 \
-  if (var##_span.size() != size)                                               \
+#define ensure_memory_size(var, offset, expected_size)                                  \
+  const auto var##_span = memory->getSpan<char>(offset, expected_size);                 \
+  if (var##_span.size() != expected_size)                                               \
     return Unexpect(ErrCode::Value::HostFuncError);                            \
   const auto var = var##_span.data();
 Expect<int32_t>

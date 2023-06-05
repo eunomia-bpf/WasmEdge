@@ -29,11 +29,13 @@ if(WASMEDGE_LINK_PLUGINS_STATIC)
   target_link_libraries(wasmBpfTests
     PRIVATE
     wasmedgeCAPI
+    wasmedgeExecutor
   )
 else()
   target_link_libraries(wasmBpfTests
     PRIVATE
     wasmedge_shared
+    wasmedgeExecutor
   )
 endif()
 
