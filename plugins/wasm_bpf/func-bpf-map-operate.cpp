@@ -39,7 +39,7 @@ BpfMapOperate::body(const WasmEdge::Runtime::CallingFrame &Frame, int32_t fd,
   auto key_size = map_info.key_size;
   auto value_size = map_info.value_size;
 
-  switch ((bpf_map_cmd)cmd) {
+  switch ((bpf_cmd)cmd) {
   case BPF_MAP_GET_NEXT_KEY: {
     ensure_memory_size(key_ptr, key, key_size);
     ensure_memory_size(next_key_ptr, next_key, key_size);

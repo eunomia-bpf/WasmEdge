@@ -6,28 +6,38 @@
 # - ${LIBBPF_SOURCE_DIR}
 # - FetchContent
 
+option(WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF "Build libbpf without pkg-config. Requires libelf and libz being placed at the proper place." YES)
+
 message(STATUS "Trying to get libbpf..")
+message(STATUS "Build libbpf with pkg-config: ${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF}")
 set(LIBBPF_FOUND FALSE)
 
 # A wrapper function to add libbpf located at a local path as a dependency
-function(AddLibbpfAsExternal SOURCE_ROOT)
+function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
   include(ExternalProject)
+  set(LIBBPF_SO_PATH ${SOURCE_ROOT}/src/build/libbpf.so)
+  set(LIBBPF_INCLUDE_DIRS_LOCAL "${SOURCE_ROOT}/src/root/usr/include" "${SOURCE_ROOT}/include/uapi" "${SOURCE_ROOT}/include")
+  set(LIBBPF_INCLUDE_DIRS ${LIBBPF_INCLUDE_DIRS_LOCAL} PARENT_SCOPE)
+
+  set(LIBBPF_LIBRARIES ${LIBBPF_SO_PATH} PARENT_SCOPE)
+  set(LIBBPF_LIBRARIES_STATIC ${SOURCE_ROOT}/src/build/libbpf.a PARENT_SCOPE)
+
+  if(${WITH_PKG_CONF})
+    set(PKGCONF_PREFIX "")
+  else()
+    set(PKGCONF_PREFIX "NO_PKG_CONFIG=1")
+  endif()
+
   ExternalProject_Add(libbpf
     PREFIX libbpf
     SOURCE_DIR ${SOURCE_ROOT}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND "make" "-C" "${SOURCE_ROOT}/src"
-    INSTALL_COMMAND ""
+    CONFIGURE_COMMAND "mkdir" "build" "root"
+    BUILD_COMMAND "${PKGCONF_PREFIX}" "OBJDIR=${SOURCE_ROOT}/src/build" "DESTDIR=${SOURCE_ROOT}/src/root" "CFLAGS=-fPIC" "make" "-C" "${SOURCE_ROOT}/src" "install"
+    INSTALL_COMMAND "cp" "${LIBBPF_SO_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/libbpf.so"
     BUILD_IN_SOURCE TRUE
   )
-  set(LIBBPF_SO_PATH ${SOURCE_ROOT}/src/libbpf.so)
-  set(LIBBPF_INCLUDE_DIRS ${SOURCE_ROOT}/src PARENT_SCOPE)
-  set(LIBBPF_LIBRARIES ${LIBBPF_SO_PATH} PARENT_SCOPE)
-  set(LIBBPF_TARGET_NAME libbpf PARENT_SCOPE)
-  file(COPY_FILE ${LIBBPF_SO_PATH} ${CMAKE_CURRENT_BINARY_DIR}/libbpf.so)
 
-  # Copy libbpf.so to the place where libwasmedgePluginWasmBpf.so exists
-  message(STATUS "Copied libbpf.so from ${LIBBPF_SO_PATH} to ${CMAKE_CURRENT_BINARY_DIR}/libbpf.so")
+  set(LIBBPF_TARGET_NAME libbpf PARENT_SCOPE)
 endfunction()
 
 # Try PkgConfig
@@ -38,11 +48,19 @@ if(NOT ${LIBBPF_FOUND})
     message(STATUS "Try to get libbpf through PkgConfig")
 
     # It will set LIBBPF_FOUND for us
-    pkg_check_modules(LIBBPF libbpf>=1.2 IMPORTED_TARGET)
+    pkg_check_modules(LIBBPF libbpf>=1.2.0 IMPORTED_TARGET)
     set(LIBBPF_TARGET_NAME "PkgConfig::LIBBPF")
+    message(STATUS "LIBBPF_FOUND=${LIBBPF_FOUND}")
+
+    if(${LIBBPF_FOUND})
+      SET(LIBBPF_FOUND TRUE)
+    else()
+      SET(LIBBPF_FOUND FALSE)
+    endif()
 
     if(${LIBBPF_FOUND})
       message(STATUS "libbpf found using PkgConfig")
+      set(LIBBPF_SOURCE "pkgconf")
     else()
       message(STATUS "libbpf not found using pkgconfig")
     endif()
@@ -56,9 +74,10 @@ if(NOT ${LIBBPF_FOUND})
   message(STATUS "Try to get libbpf through the pre-defined LIBBPF_SOURCE_DIR")
 
   if(DEFINED LIBBPF_SOURCE_DIR)
-    AddLibbpfAsExternal(${LIBBPF_SOURCE_DIR})
+    AddLibbpfAsExternal(${LIBBPF_SOURCE_DIR} ${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF})
     set(LIBBPF_FOUND TRUE)
     message(STATUS "libbpf found using LIBBPF_SOURCE_DIR")
+    set(LIBBPF_SOURCE "sourcedir")
   else()
     message(STATUS "LIBBPF_SOURCE_DIR not defined")
   endif()
@@ -83,8 +102,9 @@ if(NOT ${LIBBPF_FOUND})
 
   set(LIBBPF_DOWNLOAD_SOURCE_DIR "${libbpf_SOURCE_DIR}")
   message(DEBUG "libbpf saved at: ${LIBBPF_DOWNLOAD_SOURCE_DIR}")
-  AddLibbpfAsExternal(${LIBBPF_DOWNLOAD_SOURCE_DIR})
+  AddLibbpfAsExternal(${LIBBPF_DOWNLOAD_SOURCE_DIR} ${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF})
   set(LIBBPF_FOUND TRUE)
+  set(LIBBPF_SOURCE "fetch-content")
 endif()
 
 # If we cannot find libbpf..
@@ -92,16 +112,22 @@ if(NOT ${LIBBPF_FOUND})
   message(FATAL_ERROR "Could not find libbpf")
 endif()
 
-message(DEBUG "LIBBPF_INCLUDE_DIRS=${LIBBPF_INCLUDE_DIRS}")
-message(DEBUG "LIBBPF_LIBRARIES=${LIBBPF_LIBRARIES}")
-message(DEBUG "LIBBPF_TARGET_NAME=${LIBBPF_TARGET_NAME}")
+message(STATUS "LIBBPF_INCLUDE_DIRS=${LIBBPF_INCLUDE_DIRS}")
+message(STATUS "LIBBPF_LIBRARIES=${LIBBPF_LIBRARIES}")
+message(STATUS "LIBBPF_TARGET_NAME=${LIBBPF_TARGET_NAME}")
+message(STATUS "LIBBPF_LIBRARIES_STATIC=${LIBBPF_LIBRARIES_STATIC}")
+message(STATUS "LIBBPF_SOURCE=${LIBBPF_SOURCE}")
+message(STATUS "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
+message(STATUS "LIBBPF_DEP_LIBRARIES_STATIC=${LIBBPF_DEP_LIBRARIES_STATIC}")
 
-# Find the dependencies `libelf` and `libz` of libbpf
-find_package(PkgConfig)
+if(WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF)
+  # Find the dependencies `libelf` and `libz` of libbpf
+  find_package(PkgConfig)
 
-pkg_check_modules(LIBBPF_DEP REQUIRED libelf zlib)
+  pkg_check_modules(LIBBPF_DEP REQUIRED libelf zlib)
 
-message(DEBUG "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
+  message(DEBUG "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
+endif()
 
 wasmedge_add_library(wasmedgePluginWasmBpf
   SHARED
@@ -117,7 +143,16 @@ wasmedge_add_library(wasmedgePluginWasmBpf
 )
 
 add_dependencies(wasmedgePluginWasmBpf ${LIBBPF_TARGET_NAME})
-target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES} ${LIBBPF_DEP_LIBRARIES})
+
+if("${LIBBPF_SOURCE}" STREQUAL "pkgconf")
+  message(STATUS "Link libbpf dynamically")
+  target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES} ${LIBBPF_DEP_LIBRARIES})
+else()
+  # Link libbpf statically if we don't use pkgconf, because under this case libbpf is not installed systemwide
+  message(STATUS "Link libbpf statically")
+  target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES_STATIC} ${LIBBPF_DEP_LIBRARIES})
+endif()
+
 target_include_directories(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_INCLUDE_DIRS})
 
 set_target_properties(wasmedgePluginWasmBpf PROPERTIES
@@ -141,12 +176,10 @@ if(WASMEDGE_LINK_PLUGINS_STATIC)
   target_link_libraries(wasmedgePluginWasmBpf
     PRIVATE
     wasmedgeCAPI
-    ${LIBBPF_LIBRARIES}
   )
 else()
   target_link_libraries(wasmedgePluginWasmBpf
     PRIVATE
     wasmedge_shared
-    ${LIBBPF_LIBRARIES}
   )
 endif()
