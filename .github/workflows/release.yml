@@ -179,7 +179,8 @@ jobs:
         if: contains(matrix.name, 'wasm_bpf')
         run: |
           apt-get update
-          apt-get install -y libelf-dev zlib1g-dev
+          apt-get install -y libelf-dev zlib1g-dev pkg-config
+          git config --global --add safe.directory /__w/WasmEdge/WasmEdge
           mkdir -p build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_PLUGIN_WASM_BPF=On ..
