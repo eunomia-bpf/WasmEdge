@@ -145,9 +145,11 @@ wasmedge_add_library(wasmedgePluginWasmBpf
 add_dependencies(wasmedgePluginWasmBpf ${LIBBPF_TARGET_NAME})
 
 if(${LIBBPF_SOURCE} EQUAL "pkgconf")
+  message(STATUS "Link libbpf dynamically")
   target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES} ${LIBBPF_DEP_LIBRARIES})
 else()
   # Link libbpf statically if we don't use pkgconf, because under this case libbpf is not installed systemwide
+  message(STATUS "Link libbpf statically")
   target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES_STATIC} ${LIBBPF_DEP_LIBRARIES})
 endif()
 
