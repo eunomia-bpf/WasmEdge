@@ -7,11 +7,13 @@
 #include "runtime/instance/module.h"
 #include "wasmedge/wasmedge.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wextern-c-compat"
 extern "C" {
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 }
-
+#pragma GCC diagnostic pop
 #define POLL_TIMEOUT_MS 100
 #define PERF_BUFFER_PAGES 64
 #define DEBUG_LIBBPF_RUNTIME 0
