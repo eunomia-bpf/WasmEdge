@@ -273,9 +273,8 @@ jobs:
             output_path: plugins/wasm_bpf
             output_bin: libwasmedgePluginWasmBpf.so
             cmake_plugin_option: "-DWASMEDGE_PLUGIN_WASM_BPF=ON -DWASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF=OFF"
-            tar_name: wasmedge_bpf
+            tar_name: wasme_bpf
             host_runner: ubuntu-latest
-            deps_path: "utils/wasm_bpf/install-build-deps.sh"
     name: Build and upload WasmEdge ${{ matrix.name }} plugin on ${{ matrix.docker_tag }}
     needs: create_release
     runs-on: ${{ matrix.host_runner }}
