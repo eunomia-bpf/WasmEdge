@@ -176,12 +176,10 @@ if(WASMEDGE_LINK_PLUGINS_STATIC)
   target_link_libraries(wasmedgePluginWasmBpf
     PRIVATE
     wasmedgeCAPI
-    ${LIBBPF_LIBRARIES}
   )
 else()
   target_link_libraries(wasmedgePluginWasmBpf
     PRIVATE
     wasmedge_shared
-    ${LIBBPF_LIBRARIES}
   )
 endif()
