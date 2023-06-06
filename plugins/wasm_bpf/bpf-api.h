@@ -8,12 +8,18 @@
 #include "wasmedge/wasmedge.h"
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wextern-c-compat"
+#ifdef __clang__
+// Allow compilation using clang
+#pragma GCC diagnostic warning "-Wextern-c-compat"
+
+#endif
 extern "C" {
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 }
+
 #pragma GCC diagnostic pop
+
 #define POLL_TIMEOUT_MS 100
 #define PERF_BUFFER_PAGES 64
 #define DEBUG_LIBBPF_RUNTIME 0
