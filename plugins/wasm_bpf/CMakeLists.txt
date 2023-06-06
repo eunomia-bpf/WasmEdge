@@ -32,7 +32,7 @@ function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
     PREFIX libbpf
     SOURCE_DIR ${SOURCE_ROOT}
     CONFIGURE_COMMAND "mkdir" "build" "root"
-    BUILD_COMMAND "${PKGCONF_PREFIX}" "OBJDIR=${SOURCE_ROOT}/src/build" "DESTDIR=${SOURCE_ROOT}/src/root" "make" "-C" "${SOURCE_ROOT}/src" "install"
+    BUILD_COMMAND "${PKGCONF_PREFIX}" "OBJDIR=${SOURCE_ROOT}/src/build" "DESTDIR=${SOURCE_ROOT}/src/root" "CFLAGS=-fPIC" "make" "-C" "${SOURCE_ROOT}/src" "install"
     INSTALL_COMMAND "cp" "${LIBBPF_SO_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/libbpf.so"
     BUILD_IN_SOURCE TRUE
   )
@@ -48,7 +48,7 @@ if(NOT ${LIBBPF_FOUND})
     message(STATUS "Try to get libbpf through PkgConfig")
 
     # It will set LIBBPF_FOUND for us
-    pkg_check_modules(LIBBPF libbpf>=1111.2.0 IMPORTED_TARGET)
+    pkg_check_modules(LIBBPF libbpf>=1.2.0 IMPORTED_TARGET)
     set(LIBBPF_TARGET_NAME "PkgConfig::LIBBPF")
     message(STATUS "LIBBPF_FOUND=${LIBBPF_FOUND}")
 
@@ -60,6 +60,7 @@ if(NOT ${LIBBPF_FOUND})
 
     if(${LIBBPF_FOUND})
       message(STATUS "libbpf found using PkgConfig")
+      set(LIBBPF_SOURCE "pkgconf")
     else()
       message(STATUS "libbpf not found using pkgconfig")
     endif()
@@ -76,6 +77,7 @@ if(NOT ${LIBBPF_FOUND})
     AddLibbpfAsExternal(${LIBBPF_SOURCE_DIR} ${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF})
     set(LIBBPF_FOUND TRUE)
     message(STATUS "libbpf found using LIBBPF_SOURCE_DIR")
+    set(LIBBPF_SOURCE "sourcedir")
   else()
     message(STATUS "LIBBPF_SOURCE_DIR not defined")
   endif()
@@ -102,6 +104,7 @@ if(NOT ${LIBBPF_FOUND})
   message(DEBUG "libbpf saved at: ${LIBBPF_DOWNLOAD_SOURCE_DIR}")
   AddLibbpfAsExternal(${LIBBPF_DOWNLOAD_SOURCE_DIR} ${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF})
   set(LIBBPF_FOUND TRUE)
+  set(LIBBPF_SOURCE "fetch-content")
 endif()
 
 # If we cannot find libbpf..
@@ -112,6 +115,10 @@ endif()
 message(STATUS "LIBBPF_INCLUDE_DIRS=${LIBBPF_INCLUDE_DIRS}")
 message(STATUS "LIBBPF_LIBRARIES=${LIBBPF_LIBRARIES}")
 message(STATUS "LIBBPF_TARGET_NAME=${LIBBPF_TARGET_NAME}")
+message(STATUS "LIBBPF_LIBRARIES_STATIC=${LIBBPF_LIBRARIES_STATIC}")
+message(STATUS "LIBBPF_SOURCE=${LIBBPF_SOURCE}")
+message(STATUS "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
+message(STATUS "LIBBPF_DEP_LIBRARIES_STATIC=${LIBBPF_DEP_LIBRARIES_STATIC}")
 
 if(WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF)
   # Find the dependencies `libelf` and `libz` of libbpf
@@ -136,7 +143,14 @@ wasmedge_add_library(wasmedgePluginWasmBpf
 )
 
 add_dependencies(wasmedgePluginWasmBpf ${LIBBPF_TARGET_NAME})
-target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES} ${LIBBPF_DEP_LIBRARIES})
+
+if(${LIBBPF_SOURCE} EQUAL "pkgconf")
+  target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES} ${LIBBPF_DEP_LIBRARIES})
+else()
+  # Link libbpf statically if we don't use pkgconf, because under this case libbpf is not installed systemwide
+  target_link_libraries(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_LIBRARIES_STATIC} ${LIBBPF_DEP_LIBRARIES})
+endif()
+
 target_include_directories(wasmedgePluginWasmBpf PUBLIC ${LIBBPF_INCLUDE_DIRS})
 
 set_target_properties(wasmedgePluginWasmBpf PROPERTIES
