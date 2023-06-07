@@ -24,9 +24,9 @@ function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
 
   if(${WITH_PKG_CONF})
     set(PKGCONF_PREFIX "")
-    set(LIBBPF_DEP_LIBRARIES "elf" "z" PARENT_SCOPE)
   else()
     set(PKGCONF_PREFIX "NO_PKG_CONFIG=1")
+    set(LIBBPF_DEP_LIBRARIES "elf" "z" PARENT_SCOPE)
   endif()
 
   ExternalProject_Add(libbpf
