@@ -24,7 +24,7 @@ function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
 
   if(${WITH_PKG_CONF})
     set(PKGCONF_PREFIX "")
-    set(LIBBPF_DEP_LIBRARIES "z" "elf" PARENT_SCOPE)
+    set(LIBBPF_DEP_LIBRARIES "elf" "z" PARENT_SCOPE)
   else()
     set(PKGCONF_PREFIX "NO_PKG_CONFIG=1")
   endif()
@@ -113,6 +113,15 @@ if(NOT ${LIBBPF_FOUND})
   message(FATAL_ERROR "Could not find libbpf")
 endif()
 
+if(${WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF})
+  # Find the dependencies `libelf` and `libz` of libbpf
+  find_package(PkgConfig)
+
+  pkg_check_modules(LIBBPF_DEP REQUIRED libelf zlib)
+
+  message(STATUS "(From PKGCONF) LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
+endif()
+
 message(STATUS "LIBBPF_INCLUDE_DIRS=${LIBBPF_INCLUDE_DIRS}")
 message(STATUS "LIBBPF_LIBRARIES=${LIBBPF_LIBRARIES}")
 message(STATUS "LIBBPF_TARGET_NAME=${LIBBPF_TARGET_NAME}")
@@ -120,15 +129,6 @@ message(STATUS "LIBBPF_LIBRARIES_STATIC=${LIBBPF_LIBRARIES_STATIC}")
 message(STATUS "LIBBPF_SOURCE=${LIBBPF_SOURCE}")
 message(STATUS "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
 message(STATUS "LIBBPF_DEP_LIBRARIES_STATIC=${LIBBPF_DEP_LIBRARIES_STATIC}")
-
-if(WASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF)
-  # Find the dependencies `libelf` and `libz` of libbpf
-  find_package(PkgConfig)
-
-  pkg_check_modules(LIBBPF_DEP REQUIRED libelf zlib)
-
-  message(DEBUG "LIBBPF_DEP_LIBRARIES=${LIBBPF_DEP_LIBRARIES}")
-endif()
 
 wasmedge_add_library(wasmedgePluginWasmBpf
   SHARED
