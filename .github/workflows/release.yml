@@ -211,10 +211,11 @@ jobs:
         run: |
           cd build
           cmake -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_PLUGIN_WASM_BPF=ON ..
-          cd ..
-          cd ${output_dir}
           make -j
+          cd ..
+          cp -f ${output_dir}/${output_bin} ${output_bin}
           tar -zcvf plugin_wasm_bpf.tar.gz ${output_bin}
+
       - name: Upload wasm_bpf plugin tar.gz package
         uses: actions/upload-release-asset@v1
         env:
@@ -383,7 +384,7 @@ jobs:
             host_runner: ubuntu-latest
             docker_tag: manylinux2014_x86_64
             build_type: Release
-    name: Build and upload plugins on ${{ matrix.docker_tag }}
+    name: Build and upload wasm_bpf on ${{ matrix.docker_tag }}
     needs: create_release
     runs-on: ${{ matrix.host_runner }}
     env:
@@ -408,6 +409,7 @@ jobs:
           cd build
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${build_options_manylinux2014_x86_64} ..
           make -j
+          cd ..
           cp -f ${output_dir}/${output_bin} ${output_bin}
           tar -zcvf plugin_wasm_bpf.tar.gz ${output_bin}
       - name: Upload WasmEdge wwasm_bpf plugin tar.gz package
