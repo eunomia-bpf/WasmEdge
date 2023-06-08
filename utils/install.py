@@ -324,8 +324,8 @@ SUPPORTTED_PLUGINS = {
     + "aarch64"
     + WASI_NN_TENSORFLOW_LITE: VersionString("0.11.2-alpha.1"),
     "ubuntu20.04" + "x86_64" + WASI_NN_TENSORFLOW_LITE: VersionString("0.11.2-rc.1"),
-    "ubuntu20.04" + "x86_64" + WASM_BPF: VersionString("0.12.2"),
-    "manylinux2014" + "x86_64" + WASM_BPF: VersionString("0.12.2"),
+    "ubuntu20.04" + "x86_64" + WASM_BPF: VersionString("0.13.0"),
+    "manylinux2014" + "x86_64" + WASM_BPF: VersionString("0.13.0"),
 }
 
 HOME = expanduser("~")
