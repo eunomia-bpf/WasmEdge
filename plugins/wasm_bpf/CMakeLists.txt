@@ -28,7 +28,7 @@ function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
     set(PKGCONF_PREFIX "NO_PKG_CONFIG=1")
     set(LIBBPF_DEP_LIBRARIES "elf" "z" PARENT_SCOPE)
   endif()
-
+  message(STATUS "SOURCE_ROOT=${SOURCE_ROOT}")
   ExternalProject_Add(libbpf
     PREFIX libbpf
     SOURCE_DIR ${SOURCE_ROOT}
@@ -36,6 +36,7 @@ function(AddLibbpfAsExternal SOURCE_ROOT WITH_PKG_CONF)
     BUILD_COMMAND "${PKGCONF_PREFIX}" "OBJDIR=${SOURCE_ROOT}/src/build" "DESTDIR=${SOURCE_ROOT}/src/root" "CFLAGS=-fPIC" "make" "-C" "${SOURCE_ROOT}/src" "install"
     INSTALL_COMMAND "cp" "${LIBBPF_SO_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/libbpf.so"
     BUILD_IN_SOURCE TRUE
+    BUILD_BYPRODUCTS ${LIBBPF_SO_PATH} ${SOURCE_ROOT}/src/build/libbpf.a
   )
 
   set(LIBBPF_TARGET_NAME libbpf PARENT_SCOPE)
