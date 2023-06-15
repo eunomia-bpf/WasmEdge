@@ -152,10 +152,10 @@ jobs:
     env:
       output_prefix: build/plugins
       test_prefix: build/test/plugins
-      build_options: -DWASMEDGE_PLUGIN_PROCESS=ON -DWASMEDGE_PLUGIN_WASI_CRYPTO=ON -DWASMEDGE_PLUGIN_WASI_LOGGING=ON
-      tar_names: wasi_crypto wasmedge_process wasi_logging
+      build_options: -DWASMEDGE_PLUGIN_PROCESS=ON -DWASMEDGE_PLUGIN_WASI_CRYPTO=ON -DWASMEDGE_PLUGIN_WASI_LOGGING=ON -DWASMEDGE_PLUGIN_WASM_BPF=ON
+      tar_names: wasi_crypto wasmedge_process wasi_logging wasm_bpf
       test_bins: wasiCryptoTests wasmedgeProcessTests wasiLoggingTests
-      output_bins: libwasmedgePluginWasiCrypto.so libwasmedgePluginWasmEdgeProcess.so libwasmedgePluginWasiLogging.so
+      output_bins: libwasmedgePluginWasiCrypto.so libwasmedgePluginWasmEdgeProcess.so libwasmedgePluginWasiLogging.so libwasmedgePluginWasmBpf.so
     needs: [get_version_v2]
     container:
       image: wasmedge/wasmedge:${{ matrix.docker_tag }}
@@ -167,6 +167,7 @@ jobs:
         run: |
           apt update
           apt install -y libssl-dev
+          apt install -y libelf-dev zlib1g-dev pkg-config
       - name: Build plugins using ${{ matrix.compiler }} with ${{ matrix.build_type }} mode
         shell: bash
         run: |
@@ -215,7 +216,12 @@ jobs:
         with:
           name: WasmEdge-plugin-wasi_logging-${{ needs.get_version_v2.outputs.version }}-ubuntu22.04-${{ matrix.compiler }}.tar.gz
           path: plugin_wasi_logging.tar.gz
-
+      - name: Upload artifact - wasm_bpf
+        uses: actions/upload-artifact@v3
+        with:
+          name: WasmEdge-plugin-wasm_bpf-${{ needs.get_version_v2.outputs.version }}-ubuntu22.04-${{ matrix.compiler }}.tar.gz
+          path: plugin_wasm_bpf.tar.gz
+  
   # Due to the dependencies and exclusions of WASI-NN, build them saperately.
   build_manylinux_wasi_nn:
     strategy:
@@ -307,10 +313,10 @@ jobs:
     env:
       output_prefix: build/plugins
       test_prefix: build/test/plugins
-      build_options: -DWASMEDGE_PLUGIN_PROCESS=ON -DWASMEDGE_PLUGIN_WASI_CRYPTO=ON -DWASMEDGE_PLUGIN_WASI_LOGGING=ON
-      tar_names: wasi_crypto wasmedge_process wasi_logging
+      build_options: -DWASMEDGE_PLUGIN_PROCESS=ON -DWASMEDGE_PLUGIN_WASI_CRYPTO=ON -DWASMEDGE_PLUGIN_WASI_LOGGING=ON -DWASMEDGE_PLUGIN_WASM_BPF=ON -DWASMEDGE_PLUGIN_WASM_BPF_BUILD_LIBBPF_WITH_PKG_CONF=OFF
+      tar_names: wasi_crypto wasmedge_process wasi_logging wasm_bpf
       test_bins: wasiCryptoTests wasmedgeProcessTests wasiLoggingTests
-      output_bins: libwasmedgePluginWasiCrypto.so libwasmedgePluginWasmEdgeProcess.so libwasmedgePluginWasiLogging.so
+      output_bins: libwasmedgePluginWasiCrypto.so libwasmedgePluginWasmEdgeProcess.so libwasmedgePluginWasiLogging.so libwasmedgePluginWasmBpf.so
     needs: [get_version_v2]
     container:
       image: wasmedge/wasmedge:${{ matrix.docker_tag }}
@@ -370,7 +376,12 @@ jobs:
         with:
           name: WasmEdge-plugin-wasi_logging-${{ needs.get_version_v2.outputs.version }}-${{ matrix.docker_tag }}.tar.gz
           path: plugin_wasi_logging.tar.gz
-
+      - name: Upload artifact - wasm_bpf
+        uses: actions/upload-artifact@v3
+        with:
+          name: WasmEdge-plugin-wasm_bpf-${{ needs.get_version_v2.outputs.version }}-${{ matrix.docker_tag }}.tar.gz
+          path: plugin_wasm_bpf.tar.gz
+  
   build_macos:
     strategy:
       matrix:
