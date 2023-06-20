@@ -160,6 +160,7 @@ jobs:
     container:
       image: wasmedge/wasmedge:${{ matrix.docker_tag }}
       # Required for mounting debugfs
+      # Tests of wasm_bpf also require privileges
       options: --privileged
     steps:
       - uses: actions/checkout@v3
@@ -192,7 +193,6 @@ jobs:
           do
             echo "Testing ${plugin_array[$i]} :"
             cd ${test_prefix}/${plugin_array[$i]}
-            # Tests of wasm_bpf require root privilege
             ./${testbin_array[$i]}
             cd -
           done
@@ -341,7 +341,8 @@ jobs:
     needs: [get_version_v2]
     container:
       image: wasmedge/wasmedge:${{ matrix.docker_tag }}
-      # Required by mounting debugfs
+      # Required for mounting debugfs
+      # Tests of wasm_bpf also require privileges
       options: --privileged
     steps:
       - uses: actions/checkout@v3
