@@ -118,8 +118,8 @@ Set `WASMEDGE_PLUGIN_PATH=./build/plugins/wasm_bpf/` and run wasmedge:
 Use our prebuild container image:
 
 ```console
-$ docker run --privileged --rm -it ghcr.io/eunomia-bpf/wasm-podman 
-# podman --runtime /usr/local/bin/crun run --privileged  --rm -it --platform=wasi/wasm -v /runqlat.wasm:/runqlat.wasm  -v /libwasmedgePluginWasmBpf.so:/libwasmedgePluginWasmBpf.so -v /libbpf.so:/libbpf.so -v /usr/lib/x86_64-linux-gnu/:/usr/lib/x86_64-linux-gnu/ docker.io/wasmedge/example-wasi:latest /runqlat.wasm
+$ docker run --privileged --rm -it ghcr.io/eunomia-bpf/wasm-podman:latest
+# podman --runtime /usr/local/bin/crun run --privileged  --rm -it --platform=wasi/wasm -v /runqlat.wasm:/runqlat.wasm  -v /libwasmedgePluginWasmBpf.so:/libwasmedgePluginWasmBpf.so -v /usr/lib/x86_64-linux-gnu/:/usr/lib/x86_64-linux-gnu/ docker.io/wasmedge/example-wasi:latest /runqlat.wasm
 Trying to pull docker.io/wasmedge/example-wasi:latest...
 Getting image source signatures
 Copying blob 5cf93dcbdcd8 skipped: already exists  
