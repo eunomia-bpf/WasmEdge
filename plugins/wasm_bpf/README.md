@@ -113,7 +113,37 @@ Set `WASMEDGE_PLUGIN_PATH=./build/plugins/wasm_bpf/` and run wasmedge:
 ^C
 ```
 
-## run with podman
+## Run wasm-bpf plugin with podman
+
+Use our prebuild container image:
+
+```console
+$ docker run --privileged --rm -it ghcr.io/eunomia-bpf/wasm-podman 
+# podman --runtime /usr/local/bin/crun run --privileged  --rm -it --platform=wasi/wasm -v /runqlat.wasm:/runqlat.wasm  -v /libwasmedgePluginWasmBpf.so:/libwasmedgePluginWasmBpf.so -v /libbpf.so:/libbpf.so -v /usr/lib/x86_64-linux-gnu/:/usr/lib/x86_64-linux-gnu/ docker.io/wasmedge/example-wasi:latest /runqlat.wasm
+Trying to pull docker.io/wasmedge/example-wasi:latest...
+Getting image source signatures
+Copying blob 5cf93dcbdcd8 skipped: already exists  
+Copying config 332aed9d05 done  
+Writing manifest to image destination
+Storing signatures
+
+Tracing run queue latency... Hit Ctrl-C to end.
+
+     usecs               : count    distribution
+         0 -> 1          : 51       |*******************                     |
+         2 -> 3          : 74       |****************************            |
+         4 -> 7          : 103      |****************************************|
+         8 -> 15         : 63       |************************                |
+        16 -> 31         : 38       |**************                          |
+        32 -> 63         : 11       |****                                    |
+        64 -> 127        : 3        |*                                       |
+```
+
+Note: in some cases, it will report `Error: OCI runtime error: crun-wasm: the requested cgroup controller pids is not available`. Retry the command will temporary solve this issue.
+
+## Build Mannually
+
+See the privious doc to build the plugin.
 
 Install crun:
 
@@ -133,12 +163,14 @@ cd crun && git checkout enable_plugin
 ./configure --with-wasmedge
 make -j && make install
 
+# in WasmEdge dir
 cp build/plugins/wasm_bpf/*.so /
 wget https://eunomia-bpf.github.io/wasm-bpf/examples/runqlat/runqlat.wasm
 podman --runtime /usr/local/bin/crun run --privileged  --rm -it --platform=wasi/wasm -v /runqlat.wasm:/runqlat.wasm  -v /libwasmedgePluginWasmBpf.so:/libwasmedgePluginWasmBpf.so -v /libbpf.so:/libbpf.so -v /usr/lib/x86_64-linux-gnu/:/usr/lib/x86_64-linux-gnu/ docker.io/wasmedge/example-wasi:latest /runqlat.wasm
 
 # kill
-podman kill 7c29d41be993
+podman ps
+podman kill xxx 
 ```
 
 Dockerfile
