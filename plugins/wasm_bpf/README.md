@@ -50,8 +50,8 @@ Run the following commands at the root of the `WasmEdge` project:
 - Note: It's important to set `WASMEDGE_PLUGIN_WASM_BPF` to `TRUE` in the command line. This toggle controls the build of `wasm_bpf` plugin.
 
 ```sh
-cmake -DWASMEDGE_PLUGIN_WASM_BPF:BOOL=TRUE -B ./build -G "Unix Makefiles"
-cmake --build ./build --config Release --target install
+cmake -DWASMEDGE_PLUGIN_WASM_BPF:BOOL=TRUE -B ./build -G "Unix Makefiles" -DWASMEDGE_LINK_PLUGINS_STATIC=true
+cmake --build ./build --config Release --target install -j
 ```
 
 ## How to use this plugin
@@ -112,3 +112,46 @@ Set `WASMEDGE_PLUGIN_PATH=./build/plugins/wasm_bpf/` and run wasmedge:
 [289160] cpuUsage.sh -> sleep 1 
 ^C
 ```
+
+## run with podman
+
+Install crun:
+
+```sh
+apt install -y make git gcc build-essential pkgconf libtool \
+    libsystemd-dev libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev \
+    go-md2man libtool autoconf python3 automake podman
+podman system reset
+```
+
+Clone and run crun
+
+```sh
+git clone https://github.com/eunomia-bpf/crun
+cd crun && git checkout enable_plugin
+./autogen.sh
+./configure --with-wasmedge
+make -j && make install
+
+cp build/plugins/wasm_bpf/*.so /
+wget https://eunomia-bpf.github.io/wasm-bpf/examples/runqlat/runqlat.wasm
+podman --runtime /usr/local/bin/crun run --privileged  --rm -it --platform=wasi/wasm -v /runqlat.wasm:/runqlat.wasm  -v /libwasmedgePluginWasmBpf.so:/libwasmedgePluginWasmBpf.so -v /libbpf.so:/libbpf.so -v /usr/lib/x86_64-linux-gnu/:/usr/lib/x86_64-linux-gnu/ docker.io/wasmedge/example-wasi:latest /runqlat.wasm
+
+# kill
+podman kill 7c29d41be993
+```
+
+Dockerfile
+
+```Dockerfile
+FROM scratch
+# Add the TensorFlow lite library as the WASI-NN plugin dependency.
+ADD libbpf.so /
+# Add WasmEdge WASI-NN Plugin
+ADD libwasmedgePluginWasmBpf.so /
+
+# This is for the container entry, give a hint to users that they will need to spec>
+CMD ["/runqlat.wasm"]  
+```
+
+refer to: <https://github.com/hydai/wasm-container-images/tree/master/tflite-bird-v1>
